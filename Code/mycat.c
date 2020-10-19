@@ -21,7 +21,8 @@ int main(int argc, char **argv){
 		while(lus =read(0, buffer ,sizeof(buffer)))
 			write(1 ,buffer ,lus);
 	}
-	if(isTar(argv[1])==1){
+	
+	if(isTar(argv[1])==1 && argc>=3){
 		
 		for(int i=2;i<argc;i++){
 			contenu_tar(argv[1],argv[i]);
