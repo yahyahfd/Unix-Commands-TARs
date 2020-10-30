@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <dirent.h>
+#include <tar.h>
 #include "functions.h"
 
 
@@ -26,14 +27,8 @@ int contenu_tar(char *chemin,char *filename){
 		while(cmp(p.name,filename)==-1 && lus>0);
 			
 		if(cmp(p.name,filename)==0){
-			printf("%s\n",p.name);
-			printf("%s\n",filename);
-			printf("le size %d\n",(atoi(p.size)));
-			printf("%d\n",((atoi(p.size)-512+1)/512));
-
-				if(((atoi(p.size)-512+1)/512)<1)
+				if(((atoi(p.size)-512+1)/512)<=1)
 				{
-					printf("%d\n",(atoi(p.size)));
 					lus=read(fd,tmp,atoi(p.size));
 					write(STDOUT_FILENO ,tmp,lus);
 				  }
