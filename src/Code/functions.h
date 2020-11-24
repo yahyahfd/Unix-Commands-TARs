@@ -11,17 +11,18 @@
 /**verifie si le chemin contient un tar ,si oui elle renvoie le chemin du tar et celui du fichier  *******/
 char *split(char *path,int num){
 	char *tar=strdup(path),*filename=NULL;
-	int i=0,n;
-	while(i!=-1){
+	int i=0,n=0;
+	while(i!=-1 && i<strlen(path)-3){
 			if(path[i]=='.' && path[i+1]=='t' && path[i+2]=='a' && path[i+3]=='r'){
 				tar[i+4]='\0';
 				i=-1;
+				n=-1;
 			}
 			else{
 				i++;
 			}
 		}
-		if(strlen(path)-strlen(tar)==0)
+		if(n==0)
 			return "echec";
 		filename=malloc(strlen(path)-strlen(tar));
 		strncat(filename,path+strlen(tar)+1,strlen(path)-strlen(tar)-1);
@@ -29,11 +30,8 @@ char *split(char *path,int num){
 		return tar;
 	if(num==2)
 		return filename;
-	if(strlen(path)-strlen(tar)==0)
-		return "echec";
 	return "";
-	}	
-
+	}
 
 /***********compare deux chaînes de caractéres**************/
 
@@ -55,6 +53,3 @@ int isTar (char c[]){
    }
    return 0;
 }
-			
-			
-		
