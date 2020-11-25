@@ -43,7 +43,7 @@ char *split(char *path,int num){
 	free(tar);
 	free(filename);
 	exit(1);
-	}
+	}	
 
 
 /***********compare deux chaînes de caractéres**************/
