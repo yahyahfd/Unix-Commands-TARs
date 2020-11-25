@@ -7,6 +7,7 @@
 #include "tar.h"
 #include <string.h>
 #include <stdlib.h>
+
 /********split*****************/
 /**verifie si le chemin contient un tar ,si oui elle renvoie le chemin du tar et celui du fichier  *******/
 char *split(char *path,int num){
@@ -56,6 +57,21 @@ int cmp(char *name1,char *name2){
 		}
 	return 0;
 	}
+
+	/***********since "cmp" didn't take into account that "path" is similar to "path/" **************/
+	int samepath(char *name1,char *name2){
+		if((strlen(name1)==strlen(name2)+1)){
+			for(int i=0;i<strlen(name2);i++){
+				if(name1[i]!=name2[i])
+					return -1;
+			}
+			if(name1[strlen(name2)=='/'])
+				return 0;
+		}
+		return -1;
+	}
+
+
 /***************vérifie si c'est une archive tar********************/
 
 int isTar (char c[]){
@@ -65,6 +81,3 @@ int isTar (char c[]){
    }
    return 0;
 }
-			
-			
-		
