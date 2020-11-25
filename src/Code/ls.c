@@ -7,6 +7,7 @@
 #include <dirent.h>
 #include "functions.h"
 
+/*
 int ls(char *dir, int isl){
   DIR *dirp;
   struct dirent *entry;
@@ -69,6 +70,35 @@ int ls(char *dir, int isl){
     }
 	}
 }
+*/
+
+int ls_tar(char *chemin, int isl){
+  /*OUVERTURE DE L'ARCHIVE TAR EN LECTURE SEULE*/
+  struct posix_header tarstr;
+  char buffer[512];
+  char tmp[100];
+  int fd = open(chemin,O_RDONLY,0),lus,size;
+
+  if (fd==-1) {
+    perror("This file does not exist");
+    exit(EXIT_FAILURE);
+  }
+
+  do {
+    lus=read(fd, &tarstr, 512);
+    if(tarstr.name[0]!='\0'){
+      printf("%s  ", tarstr.name);
+      //printf("les droits : %s\n", tarstr.mode);
+      sscanf(tarstr.size,"%o",&size);
+      for(int i=0;i<((size+512-1)/512);i++){
+        lus=read(fd,buffer,512);
+      }
+    }
+  }while(lus>0);
+  close(fd);
+  return 0;
+}
+
 
 int main(int argc, char **argv){
   if(argc==1){//if ls is called alone
@@ -77,7 +107,7 @@ int main(int argc, char **argv){
     //a occurences of tarballs in argv
     //options equals 0 if an option was called
     //if opts is different than -1 then an option different than 'l' was called
-    int a=0,options=-1,opts=-1;
+    int a=-1,options=-1,opts=-1;
     for(int i=1;i<argc;i++){
       if(argv[i][0]=='-'){//argv[i] is an option
         options=0;
@@ -87,14 +117,14 @@ int main(int argc, char **argv){
         }
         for(int j=1;j<x;j++){
           if(argv[i][j]!='l'){
-            opts++;
+            opts=0;
           }
         }
       }else if(cmp(split(argv[i],1),"echec")==-1 || isTar(argv[i])==1){//argv[i] is a tarball
-        a++;
+        a=0;
       }
     }
-    if(a==0){//if there is no tar in argv, we just call ls on argv
+    if(a==-1){//if there is no tar in argv, we just call ls on argv
       execvp("/bin/ls",argv);
     }else{//if there are tarballs, we need to call ls on each argv[i]: normal ls on regular files, our ls on tarballs
       if(opts!=-1){//options other than l aren't compatible with tarballs
@@ -104,12 +134,15 @@ int main(int argc, char **argv){
         for(int i=1;i<argc;i++){
           if(argv[i][0]!='-'){
             if(cmp(split(argv[i],1),"echec")==-1){//tarball
-              if(cmp(split(argv[i],2),NULL)==-1){// if the whole path is a tar
-
+              if(cmp(split(argv[i],1),argv[i])==0 || samepath(argv[i],split(argv[i],1))==0){// if the whole path is a tar
+                printf("%s:\n", argv[i]);
+                ls_tar(argv[i],0);
+                printf("\n");
               }else{//otherwise, we just use ls on the file specified
-
+                printf("oooo\n");
               }
             }else{//regular file
+              printf("%s:\n", argv[i]);
               int pid=fork();
               if(pid<0)
                 return (EXIT_FAILURE);
