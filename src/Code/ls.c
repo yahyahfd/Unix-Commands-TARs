@@ -73,10 +73,8 @@ int ls(char *dir, int isl){
 */
 
 int ls_tar(char *chemin, int isl){
-  /*OUVERTURE DE L'ARCHIVE TAR EN LECTURE SEULE*/
   struct posix_header tarstr;
   char buffer[512];
-  char tmp[100];
   int fd = open(chemin,O_RDONLY,0),lus,size;
 
   if (fd==-1) {
@@ -87,14 +85,41 @@ int ls_tar(char *chemin, int isl){
   do {
     lus=read(fd, &tarstr, 512);
     if(tarstr.name[0]!='\0'){
-      printf("%s  ", tarstr.name);
-      //printf("les droits : %s\n", tarstr.mode);
+      int m=0;
+      while(m<100 && tarstr.name[m]!='\0'){
+        m++;
+      }
+      write(STDOUT_FILENO, &tarstr,m);
+      write(STDOUT_FILENO, "  ", 2);
       sscanf(tarstr.size,"%o",&size);
       for(int i=0;i<((size+512-1)/512);i++){
         lus=read(fd,buffer,512);
       }
     }
   }while(lus>0);
+  close(fd);
+  return 0;
+}
+
+int ls_tar_file(char *chemin, char *filename, int isl){
+  struct posix_header tarstr;
+  int fd = open(chemin,O_RDONLY,0),lus,size;
+
+  if (fd==-1) {
+    perror("This file does not exist");
+    exit(EXIT_FAILURE);
+  }
+  do {
+    lus=read(fd, &tarstr, 512);
+  }while(cmp(tarstr.name,filename)==-1 && lus>0);
+  if(cmp(tarstr.name,filename)==0){
+    int m=0;
+    while(m<100 && tarstr.name[m]!='\0'){
+      m++;
+    }
+    write(STDOUT_FILENO, &tarstr,m);
+    write(STDOUT_FILENO, "  ", 2);
+  }
   close(fd);
   return 0;
 }
@@ -135,14 +160,19 @@ int main(int argc, char **argv){
           if(argv[i][0]!='-'){
             if(cmp(split(argv[i],1),"echec")==-1){//tarball
               if(cmp(split(argv[i],1),argv[i])==0 || samepath(argv[i],split(argv[i],1))==0){// if the whole path is a tar
-                printf("%s:\n", argv[i]);
+                write(STDOUT_FILENO, split(argv[i],1), strlen(split(argv[i],1)));
+                write(STDOUT_FILENO, ":\n", 2);
                 ls_tar(argv[i],0);
-                printf("\n");
+                write(STDOUT_FILENO, " \n", 2);
               }else{//otherwise, we just use ls on the file specified
-                printf("oooo\n");
+                write(STDOUT_FILENO, split(argv[i],1), strlen(split(argv[i],1)));
+                write(STDOUT_FILENO, ":\n", 2);
+                ls_tar_file(split(argv[i],1),split(argv[i],2),0);
+                write(STDOUT_FILENO, " \n", 2);
               }
             }else{//regular file
-              printf("%s:\n", argv[i]);
+              write(STDOUT_FILENO, argv[i], strlen(argv[i]));
+              write(STDOUT_FILENO, ":\n", 2);
               int pid=fork();
               if(pid<0)
                 return (EXIT_FAILURE);
