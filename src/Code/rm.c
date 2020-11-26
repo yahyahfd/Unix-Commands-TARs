@@ -21,66 +21,64 @@ int tar_remove(char *filepath,int opt){
     // get file permissions
     struct stat st;
     if (fstat(fd, &st)){
-        RC_ERROR("Unable to stat archive: %s", strerror(errno)); //obtenir le libellé d'un numero d'erreur
+        perror("Unable to stat archive");
+        fprintf(stderr, "Unable to stat archive: %s\n", strerror( errno ));   //obtenir le libellé d'un numero d'erreur
     }
 
     //on place la tete de lecture au debut du fichier
     if (lseek(fd, 0, SEEK_SET) == (off_t) (-1)){
-        RC_ERROR("Unable to seek file: %s", strerror(errno));
+        perror("Unable to seek file");
+        fprintf(stderr, "Unable to seek file: %s\n", strerror( errno ));
     }
 
-    struct posix_header p;
-    char filename = split(filepath,2);
-    int lus,size=0;
-    int static i=0;
+  struct posix_header p;
+  char *filename = split(filepath,2);
+  int lus,size=0;
+  int static i=0;
 
-    while(lus=read(fd,&p,sizeof(struct posix_header))>0){
-      i+=512;
-      if(cmp(filename,p.name)==0){
-         if(p.typeflag=='5' && opt==1){
-           perror("You cannot remove a non-empty file without the -r option");
-           exit(EXIT_FAILURE);
-           }
-          lus=read(fd,&p,sizeof(struct posix_header));
-          if(diff(filename,p.name)==1 && strlen(filename)==strlen(p.name)){
-              i+=512;
-           }
-            if(diff(filename,p.name)==-1 && strlen(filename)!=strlen(p.name)){
-            perror("This directory is not empty");
-            exit(EXIT_FAILURE);
-          }
-          else{
-            lseek(fd,i,SEEK_SET);
-            i-=512;
-            while(lus=read(fd,&p,sizeof(struct posix_header))>0){
-              lseek(fd,i,SEEK_SET);
-              i+=512;
-              write(fd,&p,sizeof(struct posix_header));
-              p.name[0]='\0';
-                sscanf(p.size,"%o",&size);
-              while(size>0){
-                read(fd,&p,sizeof(struct posix_header));
-                lseek(fd,i,SEEK_SET);
-                i+=size;
-                size-=512;
-                write(fd,&p,size);
-                  }
-                }
-              exit(EXIT_SUCCESS);
-            }
-              if(p.typeflag!='5'){
-                sscanf(p.size,"%o",&size);
-                i+=size;
-              }
-              }
-            lseek(fd,i,SEEK_SET);
-            }
+  while(lus=read(fd,&p,sizeof(struct posix_header))>0){
+    i+=512;
+    if(cmp(filename,p.name)==0){
+      if(p.typeflag=='5' && opt==1){
+        perror("You cannot remove a non-empty file without the -r option");
         exit(EXIT_FAILURE);
+      }
+      lus=read(fd,&p,sizeof(struct posix_header));
+      if(strcmp(filename,p.name)!=0 && strlen(filename)==strlen(p.name)){
+        i+=512;
+      }
+      if(strcmp(filename,p.name)==0 && strlen(filename)!=strlen(p.name)){
+        perror("This directory is not empty");
+        exit(EXIT_FAILURE);
+      }else{
+        lseek(fd,i,SEEK_SET);
+        i-=512;
+        while(lus=read(fd,&p,sizeof(struct posix_header))>0){
+          lseek(fd,i,SEEK_SET);
+          i+=512;
+          write(fd,&p,sizeof(struct posix_header));
+          p.name[0]='\0';
+          sscanf(p.size,"%o",&size);
+          while(size>0){
+            read(fd,&p,sizeof(struct posix_header));
+            lseek(fd,i,SEEK_SET);
+            i+=size;
+            size-=512;
+            write(fd,&p,size);
           }
+        }
+        exit(EXIT_SUCCESS);
+      }
+      if(p.typeflag!='5'){
+        sscanf(p.size,"%o",&size);
+        i+=size;
+      }
+    }
+    lseek(fd,i,SEEK_SET);
+  }
+  exit(EXIT_FAILURE);
 
-exit(EXIT_FAILURE);
-
-    return ret;
+  return 0;
 }
 
 /*************** MAIN *****************/
@@ -92,7 +90,7 @@ int main(int argc, char **argv){
     if(argv[1][1]=='r'){
 			opt=2;
 		}else{
-      fprintf(stderr, "Error: Bad option: %c\n", argv[1][i]);
+      fprintf(stderr, "Error: Bad option: %c\n", argv[1][1]);
       return 0;
     }
   }
