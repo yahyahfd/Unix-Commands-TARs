@@ -40,7 +40,7 @@ int tar_remove(char *filepath,int opt){
     i+=512;
     if(cmp(filename,p.name)==0){
       if(p.typeflag=='5' && opt==1){
-        perror("You cannot remove a non-empty file without the -r option");
+        perror("You cannot remove a non-empty directory without the -r option");
         exit(EXIT_FAILURE);
       }
       lus=read(fd,&p,sizeof(struct posix_header));

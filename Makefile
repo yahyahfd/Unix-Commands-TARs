@@ -1,13 +1,16 @@
 CC=gcc
 CFLAGS=-g -Wall
-ALL=ls mycat
+ALL=  ls mycat
 all:$(ALL)
 
-ls: src/Code/ls.c
-	$(CC) -o src/Compile/ls src/Code/ls.c
+ls:
+	$(CC) -o src/Code/ls src/Code/ls.c
 
-mycat: src/Code/mycat.c
-	$(CC) -o src/Compile/mycat src/Code/mycat.c
+myrmdir:
+	$(CC) -o src/Code/myrmdir src/Code/myrmdir.c
+
+mycat:
+	$(CC) -o src/Code/mycat src/Code/mycat.c
 
 clean:
-	rm -rf src/Compile/*
+	rm -rf src/Code/ls src/Code/mycat
