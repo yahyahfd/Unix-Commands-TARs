@@ -17,7 +17,7 @@ int contenu_tar(char *chemin,char *filename){
 	char buffer[512];
 	int fd=open(chemin,O_RDONLY),j,i=0,lus,size;
 	if(fd==-1){
-		perror("le repertoire n'existe pas");
+		perror("Cannot open file");
 		exit(EXIT_FAILURE);
 	}
 		do {
@@ -36,7 +36,7 @@ int contenu_tar(char *chemin,char *filename){
 			 
 				}
 		close(fd);
-		perror("Aucun fichier de ce type");
+		perror("No such file");
 		return -1;
 }
 
@@ -60,10 +60,16 @@ int main(int argc, char **argv){
 			
 		for(int i=1;i<argc;i++){	
 			//si le chemin du fichier contient un tarball on utilise la fonction contenu_tar
-			if(cmp(split(argv[i],1),"echec")==-1 && cmp(split(argv[i],2),"echec")==-1)
+			if(cmp(split(argv[i],1),"echec")==-1 ){
+					if (strlen(argv[i])!=strlen(split(argv[i],1)))
 					{
 						contenu_tar(split(argv[i],1),split(argv[i],2));
 						}
+					else {
+						perror("Cat : This is a directory");
+						exit(-1);
+					}
+				}
 					else{
 						//sinon on execute la commande cat usuelle
 						int pid=fork();
