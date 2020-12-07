@@ -55,14 +55,15 @@ int tar_remove(char *filepath,int opt){
   int i=0,j=0;
 	int taille=occurences(filepath);
 
+	if(occurences(filepath)==0){
+		write(STDOUT_FILENO, "rmdir: No such file or directory\n", strlen("rmdir: No such file or directory\n"));
+	 exit(EXIT_FAILURE);
+	}
+
   while(lus=read(fd,&p,512)>0){
     i+=512;
 		j+=512;
     if(cmp(filename,p.name)==0){
-      if(occurences(filepath)==0){
-        write(STDOUT_FILENO, "rmdir: No such file or directory\n", strlen("rmdir: No such file or directory\n"));
-       exit(EXIT_FAILURE);
-      }
       if(occurences(filepath)>1 && opt == 1){
         write(STDOUT_FILENO, "rm: Cannot delete a non-empty directory without the -r option\n", strlen("rm: Cannot delete a non-empty directory without the -r option\n"));
        exit(EXIT_FAILURE);
@@ -74,7 +75,6 @@ int tar_remove(char *filepath,int opt){
 					 	memset(&p,'\0',512);
 					 	lseek(fd,i-512,SEEK_SET);
 					 	write(fd,&p,512);
-						set_checksum(&p);
   				}else{
   				 	lseek(fd,i,SEEK_SET);
   				 	while((lus=read(fd,&p,512))>0 && p.name[0]!='\0'){
@@ -87,11 +87,12 @@ int tar_remove(char *filepath,int opt){
   				 memset(&p,'\0',512);
   				 lseek(fd,j-512,SEEK_SET);
   				 write(fd,&p,512);
-  				 set_checksum(&p);
+
 			 }
 			 taille-=1;
 
-     }exit(0);
+     }set_checksum(&p);
+		 exit(0);
 
     }
     lseek(fd,i,SEEK_SET);
