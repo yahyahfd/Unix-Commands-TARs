@@ -54,6 +54,7 @@ int tar_remove(char *filepath,int opt){
   int lus;
   int i=0,j=0;
 	int taille=occurences(filepath);
+	int fin;
 
 	if(occurences(filepath)==0){
 		write(STDOUT_FILENO, "rmdir: No such file or directory\n", strlen("rmdir: No such file or directory\n"));
@@ -69,23 +70,23 @@ int tar_remove(char *filepath,int opt){
        exit(EXIT_FAILURE);
      	}else{
 			 	while (occurences(filepath) != 0) {
-				 	lseek(fd,i+((taille-1)*512),SEEK_SET);
+					fin = i+((taille-1)*512);
+				 	lseek(fd,fin,SEEK_SET);
          	read(fd,&p,512);
          	if(p.name[0]=='\0'){
 					 	memset(&p,'\0',512);
-					 	lseek(fd,i-512,SEEK_SET);
+					 	lseek(fd,fin-512,SEEK_SET);
 					 	write(fd,&p,512);
   				}else{
-  				 	lseek(fd,i,SEEK_SET);
   				 	while((lus=read(fd,&p,512))>0 && p.name[0]!='\0'){
-  					 	lseek(fd,i-512,SEEK_SET);
+  					 	lseek(fd,fin-512,SEEK_SET);
   					 	i+=512;
   					 	write(fd,&p,lus);
   					 	lseek(fd,512,SEEK_CUR);
   					 	j+=512;
   					}
   				 memset(&p,'\0',512);
-  				 lseek(fd,j-512,SEEK_SET);
+  				 lseek(fd,j+((taille-1)*512)-512,SEEK_SET);
   				 write(fd,&p,512);
 
 			 }
