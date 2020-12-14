@@ -57,7 +57,11 @@ int tar_remove(char *filepath,int opt){
 	int fin;
 
 	if(occurences(filepath)==0){
-		write(STDOUT_FILENO, "rmdir: No such file or directory\n", strlen("rmdir: No such file or directory\n"));
+		write(STDOUT_FILENO, "rm: No such file or directory\n", strlen("rm: No such file or directory\n"));
+	 exit(EXIT_FAILURE);
+	}
+	if(occurences(filepath)>1 && opt == 1){
+		write(STDOUT_FILENO, "rm: Cannot delete a non-empty directory without the -r option\n", strlen("rm: Cannot delete a non-empty directory without the -r option\n"));
 	 exit(EXIT_FAILURE);
 	}
 
@@ -65,20 +69,16 @@ int tar_remove(char *filepath,int opt){
     i+=512;
 		j+=512;
     if(cmp(filename,p.name)==0){
-      if(occurences(filepath)>1 && opt == 1){
-        write(STDOUT_FILENO, "rm: Cannot delete a non-empty directory without the -r option\n", strlen("rm: Cannot delete a non-empty directory without the -r option\n"));
-       exit(EXIT_FAILURE);
-     	}else{
 			 	while (occurences(filepath) != 0) {
 					fin = i+((taille-1)*512);
 				 	lseek(fd,fin,SEEK_SET);
          	read(fd,&p,512);
-         	if(p.name[0]=='\0'){
+         	if(p.name[0]=='\0'){		//si le bloc est a la fin
 					 	memset(&p,'\0',512);
 					 	lseek(fd,fin-512,SEEK_SET);
 					 	write(fd,&p,512);
-  				}else{
-  				 	while((lus=read(fd,&p,512))>0 && p.name[0]!='\0'){
+  				}else{		//si pas a la fin
+  				 	while((lus=read(fd,&p,512))>0 && p.name[0]!='\0'){		//dacalage du dernier bloc
   					 	lseek(fd,fin-512,SEEK_SET);
   					 	i+=512;
   					 	write(fd,&p,lus);
@@ -92,15 +92,14 @@ int tar_remove(char *filepath,int opt){
 			 }
 			 taille-=1;
 
-     }set_checksum(&p);
+     }
+		 set_checksum(&p);
 		 exit(0);
-
     }
     lseek(fd,i,SEEK_SET);
   }
 
-  return 0;
-}
+return 0;
 }
 
 /*************** MAIN *****************/
