@@ -72,7 +72,7 @@ int rmr(char *filepath){
 	struct stat st;
 	struct stat *buf = &st;
 	struct posix_header p;
-	int i=0,j=0,k=0,size,lus;
+	int i=0;
 	int fd=open(split(filepath,1),O_RDWR);
 	if(fd==-1 ){
 		write(1,"rm : No such file or directory ",strlen("rm : No such file or directory "));
@@ -88,7 +88,6 @@ int rmr(char *filepath){
 	lseek(fd,0,SEEK_SET);
 	while(read(fd,&p,512)>0){
 			i+=512;
-			j+=512;
 			if(cmp(split(filepath,2),p.name)==0){
 				while(diff(split(filepath,2),p.name)==-1 && p.name[0]!='\0'){
 						char *fullname = strdup(split(filepath,1));
@@ -102,7 +101,7 @@ int rmr(char *filepath){
 			exit(0);
 		}
 	}
-	write(1,"rm : No such file or directory2 ",strlen("rm : No such file or directory "));
+	write(1,"rm : No such file or directory ",strlen("rm : No such file or directory "));
 	exit(-1);
 }
 
