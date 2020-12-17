@@ -56,7 +56,7 @@ char *path_behind(char *filepath){
 	char *res=strdup(filepath);
 	for(int i=strlen(res)-2;i>0;i--){
 		if(res[i]=='/'){
-			res[i]='\0';
+			res[i+1]='\0';
 			return res;
 			}
 	}
@@ -75,10 +75,9 @@ char *cd(char *filepath,char *wd){
 		chdir(env);
 		pwd=strdup(env);
 	}
-	/*****************************************************************************/
 	//si on fait cd .. pour retourner en dossier pere
 	if(cmp(filepath,"..")==0){
-		pwd=strdup(cd(path_behind(wd),pwd));
+		pwd=strdup(cd(path_behind(wd),path_behind(wd)));
 		return pwd;
 				}
 				
@@ -89,22 +88,57 @@ char *cd(char *filepath,char *wd){
 				}
 	//si le chemin ne contient pas un tar 
 	if(cmp(split(filepath,1),"echec")==0){
-		if(chdir(filepath)==-1){
-			//le dossier n'existe pas
-			if(stat(filepath,buf)<0){
-				write(1,"cd : No such file or directory\n",strlen("cd : No such file or directory\n"));
-			}
-			//le fichier n'est pas un dossier
-			else{
-				if((buf->st_mode & S_IFMT)!=S_IFDIR){
-					write(1,"cd : Not a directory\n",strlen("cd : Not a directory\n"));
-			}
+		//si on est pas deja dans un tar
+		if(cmp(split(wd,1),"echec")==0){
+			if(chdir(filepath)==-1){
+				//le dossier n'existe pas
+				if(stat(filepath,buf)<0){
+					write(1,"cd : No such file or directory\n",strlen("cd : No such file or directory\n"));
+					return wd;
+				}
+				//le fichier n'est pas un dossier
+				else{
+					
+					if((buf->st_mode & S_IFMT)!=S_IFDIR){
+						write(1,"cd : Not a directory\n",strlen("cd : Not a directory\n"));
+						return wd;
+							}
+					}
+			}		
+			getcwd(tmp,MAX_LEN);
+			pwd=strdup(tmp);	
+			return pwd;	
 		}
-	}	
-		getcwd(tmp,MAX_LEN);
-		pwd=strdup(tmp);	
-		return pwd;	
-	}
+		if(cmp(split(wd,1),"echec")==-1){
+			//si on est deja dans un tar et le path du fichier commence par /
+			if(filepath[0]=='/'){
+				pwd=strdup(cd(filepath,pwd));
+				return pwd;
+			}
+			
+			if(filepath[0]=='.' && filepath[1]=='.' && filepath[2]=='/'){
+				//si on est deja dans un tar et le path du fichier commence par ../
+				char *n=strdup("");;
+				strcat(n,path_behind(wd));
+				strcat(n,filepath+3);
+				pwd=strdup(cd(n,pwd));
+				return pwd;
+				}
+				
+			else{
+				//si on est deja dans un tar et on saisie le nom d'un dossier dans le tar(sans reecrire t.tar/....)
+				chdir(before_tar(wd));
+				getcwd(tmp,MAX_LEN);
+				char *n=strdup(tmp);
+				strcat(n,"/");
+				strcat(n,tar_name(wd));
+				strcat(n,"/");
+				strcat(n,filepath);
+				pwd=strdup(cd(n,pwd));
+				}
+			}
+	return pwd;
+}
 	/****tar part****/
 	else{
 		//si on fait cd dans un tar
@@ -112,10 +146,7 @@ char *cd(char *filepath,char *wd){
 			int fd = open(split(filepath,1),O_RDONLY);
 			if(fd==-1){
 				write(1,"cd : No such file or directory\n",strlen("cd : No such file or directory\n"));
-				chdir(before_tar(filepath));
-				getcwd(tmp,MAX_LEN);
-				pwd=strdup(tmp);
-				return pwd;
+				return wd;
 				}
 			chdir(before_tar(filepath));
 			getcwd(tmp,MAX_LEN);
@@ -129,7 +160,7 @@ char *cd(char *filepath,char *wd){
 			int fd =open(split(filepath,1),O_RDONLY);
 			if(fd==-1 ){
 				write(1,"cd: error while opening the file\n",strlen("cd: error while opening the file\n"));
-				exit(-1);
+				return wd;
 			}
 			int b=0;
 			while(read(fd,&p,512)>0){
@@ -137,12 +168,12 @@ char *cd(char *filepath,char *wd){
 					//le fichier n'est pas un dossier
 					if(p.typeflag!='5'){
 						write(1,"cd : Not a directory\n",strlen("cd : Not a directory\n"));
-						chdir(before_tar(split(filepath,1)));
+						/*chdir(before_tar(split(filepath,1)));
 						getcwd(tmp,MAX_LEN);
 						pwd=strdup(tmp);
 						strcat(pwd,"/");
-						strcat(pwd,tar_name(filepath));	
-						return pwd;
+						strcat(pwd,tar_name(filepath));*/	
+						return wd;
 						}
 					b=1;
 					}
@@ -150,31 +181,39 @@ char *cd(char *filepath,char *wd){
 			//le dossier n'existe pas dans le tar
 			if(b==0){
 				write(1,"cd : No such file or directory\n",strlen("cd : No such file or directory\n"));
-				chdir(before_tar(split(filepath,1)));
+				/*chdir(before_tar(split(filepath,1)));
 				getcwd(tmp,MAX_LEN);
 				pwd=strdup(tmp);
-				strcat(pwd,"/");
+				/*strcat(pwd,"/");
 				strcat(pwd,tar_name(filepath));
-				return pwd;
+				printf("%s\n",pwd);*/
+				return wd;
 			}
 			//le dossier existe dans le tar
-			chdir(before_tar(split(filepath,1)));
+			chdir(before_tar(filepath));
 			getcwd(tmp,MAX_LEN);
 			pwd=strdup(tmp);
 			strcat(pwd,"/");
-			strcat(pwd,tar_name(filepath));		
-			strcat(pwd,"/");		
-			strcat(pwd,split(filepath,2));		
+			strcat(pwd,tar_name(filepath));	
+			strcat(pwd,"/");
+			strcat(pwd,split(filepath,2));	
+			return pwd;		
 				}
 			}
 	
 	return pwd;
-}
+}  
 
 
 
 int main(int argc,char **argv){
-	char *pwg=cd(argv[1],"");printf("%s\n",pwg);
-	char *c= cd(argv[2],pwg);printf(" %s\n",c);
+	char tmp[MAX_LEN];
+	char *pwg=cd(argv[1],pwg);printf("first  %s\n",pwg);
+	pwg=cd(argv[2],pwg);printf("%s\n",pwg);
+	pwg=cd(argv[3],pwg);printf("%s\n",pwg);
+	pwg=cd(argv[4],pwg);printf("%s\n",pwg);
+	pwg=cd(argv[5],pwg);printf("%s\n",pwg);
+	pwg=cd(argv[6],pwg);printf("%s\n",pwg);
+	//char *c= cd(argv[2],pwg);printf(" %s\n",c);
 	return 0;
 	}
