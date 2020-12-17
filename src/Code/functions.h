@@ -1,4 +1,5 @@
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -8,7 +9,28 @@
 #include <string.h>
 #include <stdlib.h>
 
-/********split*****************/
+/**returns 1 if the 2 strings are different and -1 if not**/
+int diff(char *deb ,char *str){
+	for(int i=0;i<strlen(deb);i++){
+		if(str[i]!=deb[i])
+			return 1;
+		}
+		return -1;
+	}
+
+/**retourne le nombre de mots d'une chaîne**/
+int nb_words(char *line){
+	int count=1;
+	for(int i=0;line[i]!='\0';i++){
+		if(line[i]==' ' || line[i] == '\t' || line[i] == '\n')
+		{
+			count++;
+			}
+		
+		}
+		return count;
+	}
+
 /**verifie si le chemin contient un tar ,si oui elle renvoie le chemin du tar et celui du fichier  *******/
 char *split(char *path,int num){
 	char *tar=strdup(path),*filename=NULL;
@@ -20,6 +42,9 @@ char *split(char *path,int num){
 		}
 	wait(NULL);
 	if(f==0){
+		if(strlen(path)<5){
+			 return "echec";
+			}
 		while(i!=-1 && i<strlen(path)-3){
 				if(path[i]=='.' && path[i+1]=='t' && path[i+2]=='a' && path[i+3]=='r'){
 					tar[i+4]='\0';
@@ -30,10 +55,11 @@ char *split(char *path,int num){
 					i++;
 				}
 			}
-			if(n==0)
+			if(n==0){
 				return "echec";
+			}
 			filename=malloc(strlen(path)-strlen(tar));
-			strncat(filename,path+strlen(tar)+1,strlen(path)-strlen(tar)-1);
+			strncat(filename,path+strlen(tar)+1,strlen(path)-strlen(tar));
 		if(num==1)
 			return tar;
 		if(num==2)
@@ -43,8 +69,8 @@ char *split(char *path,int num){
 	free(tar);
 	free(filename);
 	exit(1);
-	}	
-
+	}
+	
 
 /***********compare deux chaînes de caractéres**************/
 
@@ -57,27 +83,15 @@ int cmp(char *name1,char *name2){
 		}
 	return 0;
 	}
-
-	/***********since "cmp" didn't take into account that "path" is similar to "path/" **************/
-	int samepath(char *name1,char *name2){
-		if((strlen(name1)==strlen(name2)+1)){
-			for(int i=0;i<strlen(name2);i++){
-				if(name1[i]!=name2[i])
-					return -1;
-			}
-			if(name1[strlen(name2)=='/'])
-				return 0;
-		}
-		return -1;
-	}
-
-
 /***************vérifie si c'est une archive tar********************/
 
-int isTar (char c[]){
-   int i = strlen (c) - 3;
-   if ((c[i] == 't') && (c[i + 1] == 'a') && (c[i + 2] == 'r')){
-      return 1;
-   }
-   return 0;
-}
+int isTar (char *filepath){
+   for(int i=0;i<strlen(filepath)-3;i++){
+		if(filepath[i]=='.' && filepath[i+1]=='t' && filepath[i+2]=='a' &&filepath[i+3]=='r' )
+				return 1;
+				}
+	return 0;
+	}
+			
+			
+		
