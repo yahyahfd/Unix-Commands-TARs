@@ -13,6 +13,8 @@
 #include "rm.h"
 #include <grp.h>
 
+
+/*************************************/
 char *path_behind(char *filepath){
 	char *res=strdup(filepath);
 	for(int i=strlen(res)-2;i>0;i--){
@@ -29,7 +31,7 @@ int occurences(char *filepath){
 	static int k;
 	int fd=open(split(filepath,1),O_RDWR);
 	if(fd==-1){
-		perror("error while opening the file");
+		perror("error while opening the file\n");
 		exit(-1);
 		}
 	k=0;
@@ -99,7 +101,7 @@ int file_position (char *filepath){
 	struct posix_header p;
 	int fd =open(split(filepath,1),O_RDONLY);
 	if(fd<0){
-		perror("no such file or directory");
+		perror("no such file or directory\n");
 		return -1;
 		}
 	if(occurences(filepath)==0){
@@ -149,7 +151,7 @@ int copy_normal_to_tar(char *src,char *dest){
 		char buffer[buf->st_size];
 		char tmp[512];
 		if(read(s,buffer,buf->st_size)<0){
-			perror("error while reading from source file");
+			perror("error while reading from source file\n");
 			return -1;
 			}
 		if(occurences(path_behind(dest))==0){
@@ -167,7 +169,7 @@ int copy_normal_to_tar(char *src,char *dest){
 /*****************si aucun file n'existe du nom du fichier source***************************************************************/
 		else{
 				
-				lseek(d,file_end(d)-512,SEEK_SET);	
+				lseek(d,file_end(d),SEEK_SET);	
 				memset(&hd, '0', 512);
 				memset(&hd.linkname, '\0', 100);
 				memset(&hd.name, '\0', 100);
@@ -179,17 +181,19 @@ int copy_normal_to_tar(char *src,char *dest){
 				memset(&hd.devminor, '\0', 8);
 				memset(&hd.prefix, '\0', 155);
 				memset(&hd.junk, '\0', 12);
-				while (i < strlen(split(dest,2)) && i < 100)
+				while(i < strlen(split(dest,2)) && i < 100)
 				{
 					hd.name[i] = (split(dest,2))[i];
 					i++;
-				}printf("%s\n",hd.name);
+				}
 				sprintf(hd.mode, "%o",st.st_mode);
 				hd.mode[7] = '\0';
 				sprintf(hd.size, "%lo", st.st_size);
 				hd.size[11] = '\0';
 				sprintf(hd.mtime, "%lo", st.st_mtime);
 				hd.mtime[11] = '\0';
+				sprintf(hd.magic, TMAGIC);
+				sprintf(hd.version, "  ");
 				switch (st.st_mode & S_IFMT)
 				{
 				case S_IFBLK:
@@ -210,21 +214,19 @@ int copy_normal_to_tar(char *src,char *dest){
 				case S_IFREG:
 					hd.typeflag = '0';
 					break;
-				case S_IFSOCK:
-					hd.typeflag = 'g';
-					break;
 				default:
 					hd.typeflag = '7';
 					break;
 				}
-				sprintf(hd.magic, TMAGIC);
-				sprintf(hd.version, "  ");
+				
 				const char *unm = getUserName();
 				strcpy(hd.uname, unm);
 				const char *gnm = getGroupName();
 				strcpy(hd.gname, gnm);
 				set_checksum(&hd);
+				lseek(d,file_end(d),SEEK_SET);
 				write(d, &hd, sizeof(hd));
+				lseek(d,file_end(d),SEEK_SET);
 				write(d , &buffer, buf->st_size);
 				memset(&p,'\0',512);
 				write(d,&p,512);
@@ -248,7 +250,7 @@ int copy_tar_to_normal(char *src,char *dest){
 	int d = open(dest,O_RDWR|O_CREAT|O_TRUNC);
 	chmod (dest, 0700);
 	if(s<0){
-		perror("error while opening source file");
+		perror("error while opening source file\n");
 		return -1;
 		}
 	if(occurences(src)<0){
@@ -286,11 +288,11 @@ int copy_tar_to_tar(char *src,char *dest){
 	int d= open(split(dest,1),O_RDWR);
 	
 	if(s<0){
-		perror("error while opening source file");
+		perror("error while opening source file\n");
 		return -1;
 		}
 	if(d<0){
-		perror("error while opening destination file");
+		perror("error while opening destination file\n");
 		return -1;
 		}
 	if(occurences(src)==0){
@@ -363,17 +365,27 @@ int copy_tar_to_tar(char *src,char *dest){
 /***********copier un fichier normal dans un dossier tar**************************************/
 int cp_fn_tardir(char *src,char *dest){
 	
-	if(occurences(dest)==0){
+	if(cmp(split(dest,2),"")==0){
+		char *newf = strdup("");
+		strcat(newf,split(dest,1));
+		strcat(newf,"/");
+		strcat(newf,file_name(src));
+		if(occurences(newf)==0){
+			copy_normal_to_tar(src,newf);
+		}
+	}
+	else{
+		/*if(occurences(dest)==0){	
 		write(1,"cp : destination file : no such file or directory\n",strlen("cp : destination file : no such file or directory\n"));
 		return -1;
-		}
-	char *name=strdup("");
-	strcat(name,dest);
-	strcat(name,file_name(src));
-	copy_normal_to_tar(src,name);
-	
-	return 0;
+		}*/
+		char *name=strdup("");
+		strcat(name,dest);
+		strcat(name,file_name(src));
+		copy_normal_to_tar(src,name);
 	}
+	return 0;
+}
 
 /***************copier un fichier tar dans un dossier normal****/
 int cp_ftar_dn(char *src ,char *dest){
@@ -383,7 +395,7 @@ int cp_ftar_dn(char *src ,char *dest){
 	int size=0,lus,i=0;
 	int s = open(split(src,1),O_RDONLY);
 	if(s<0){
-		perror("error while opening source file");
+		perror("error while opening source file\n");
 		return -1;
 		}
 	DIR *dirp = opendir(dest);
@@ -408,7 +420,7 @@ int cp_ftar_dn(char *src ,char *dest){
 			char *buffer[size];
 			lseek(s,i,SEEK_SET);
 			if(read(s,&buffer,size)<0){
-				perror("error while reading ");
+				perror("error while reading \n");
 				return -1;
 			}
 			lseek(d,0,SEEK_SET);
@@ -522,7 +534,7 @@ int cp_ftar_tardir(char *src ,char *dest){
 				write(d,&p2,512);
 				lseek(s,i,SEEK_SET);
 				if(read(s,&buffer,size)<0){
-					perror("error while reading ");
+					perror("error while reading \n");
 					return -1;
 				}
 				lseek(d,file_end(d),SEEK_SET);
@@ -536,7 +548,7 @@ int cp_ftar_tardir(char *src ,char *dest){
 		}
 	return 0;
 	}
-/**********copy a tar directory to another **********/
+/**********copier un dossier tar dans un dossier tar **********/
 int copy_tars(char *src ,char *dest){
 	struct posix_header p1;
 	struct posix_header p2;
@@ -593,42 +605,259 @@ int copy_tars(char *src ,char *dest){
 		}
 	return 0;
 	}
-
+/********************copier un dossier normal dans un tar******/
 int cp_ndir_tardir(char *src ,char *dest){
-	 
 	
+	struct stat st;
+	struct stat *buf = &st;
+	struct dirent *dt;
+	struct posix_header p;
+	int i=0;
+	int d=open(split(dest,1),O_RDWR);
 	
+	if(dest<0){
+		write(1,"cp -r : error while opening destination file \n",strlen("cp -r : error while opening destination file\n"));
+		return -1;
+		}
 	
+	DIR *dirp = opendir(src);
+	if(dirp==NULL){
+		write(1,"cp -r : source directory : no such file or directory\n",strlen("cp -r : source directory : no such file or directory\n"));
+		return -1;
+		}
+	while((dt=readdir(dirp))!=NULL){
+		
+		if(cmp(dt->d_name,".")!=0 && cmp(dt->d_name,"..")!=0){
+			char *name=strdup("");
+			strcat(name,src);
+			if(src[strlen(src)-1]!='/')
+					strcat(name,"/");
+			strcat(name,dt->d_name);
+			if(stat(name,buf)<0){
+					perror("stat error");
+					return -1;
+					}
+		
+		if((buf->st_mode & S_IFMT)== S_IFREG){
+			char *destname=strdup("");
+			strcat(destname,dest);
+			if(destname[strlen(destname)-1]!='/')
+					strcat(destname,"/");			
+			strcat(destname,src);
+			strcat(destname,"/");
+			strcat(destname,dt->d_name);
+			copy_normal_to_tar(name,destname);
+		}
+		else if((buf->st_mode & S_IFMT)== S_IFDIR){
+				strcat(name,"/");
+				memset(&p, '0', 512);
+				memset(&p.linkname, '\0', 100);
+				memset(&p.name, '\0', 100);
+				memset(&p.prefix, '\0', 155);
+				memset(&p.magic, '\0', 6);
+				memset(&p.uname, '\0', 32);
+				memset(&p.gname, '\0', 32);
+				memset(&p.devmajor, '\0', 8);
+				memset(&p.devminor, '\0', 8);
+				memset(&p.prefix, '\0', 155);
+				memset(&p.junk, '\0', 12);
+				while (i < strlen(name) && i < 100)
+				{
+					p.name[i] = name[i];
+					i++;
+				}
+				sprintf(p.mode, "%o",st.st_mode);
+				p.mode[7] = '\0';
+				sprintf(p.size, "%lo", st.st_size);
+				p.size[11] = '\0';
+				sprintf(p.mtime, "%lo", st.st_mtime);
+				p.mtime[11] = '\0';
+				p.typeflag = '5';
+				sprintf(p.magic, TMAGIC);
+				sprintf(p.version, "  ");
+				const char *unm = getUserName();
+				strcpy(p.uname, unm);
+				const char *gnm = getGroupName();
+				strcpy(p.gname, gnm);
+				set_checksum(&p);
+				lseek(d,file_end(d),SEEK_SET);
+				write(d, &p,512);
+				lseek(d,file_end(d),SEEK_SET);
+				memset(&p,'\0',512);
+				write(d,&p,512);
+				write(d,&p,512);
+				set_checksum(&p);
+				name[strlen(name)-1]='\0';
+				cp_ndir_tardir(name,dest);
+			}
+		}
+		else{
+			}
 	}
-
-
-
-int main(int argc,char **argv){
-	copy_tars(argv[1],argv[2]);
-	//copy_tar_to_normal(argv[1],argv[2]);
-	//copy_tar_to_tar(argv[1],argv[2]);
-	//cp_ftar_dn(argv[1],argv[2]);
-	//cp_ftar_tardir(argv[1],argv[2]);
-	//printf("%s\n",path_behind(argv[1]));
-	//int f=open(argv[1],O_RDONLY);
-	
 	return 0;
-	}	
+}
+/*****************copier un dossier tar dans un dossier normal*****/
+int cp_tardir_ndir(char *src ,char *dest){
+	 struct posix_header p;
+	 int size,i,lus;
+	 struct dirent *dt;
+	 DIR *dirp = opendir(dest);
+	 int s=open(split(src,1),O_RDONLY);
+	 dirp = opendir(dest);
+	 
+	 if(s<0){
+		 write(1,"cp -r : source directory : no such file or directory\n",strlen("cp -r : source directory : no such file or directory\n"));
+		return -1;
+		}
+	 if(dirp==NULL && cmp(path_behind(dest),"")==0){
+		if( mkdir(dest,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)<0){
+			 write(1,"cp -r : destination directory : can not create directory\n",strlen("cp -r : destination directory : can not create directory\n"));
+			return -1;
+			}
+	 }
+	 else if(dirp==NULL && opendir(path_behind(dest))==NULL){
+		 write(1,"cp -r : destination directory : can not create directory\n",strlen("cp -r : destination directory : can not create directory\\n"));
+		return -1;
+		}
+	lseek(s,0,SEEK_SET);
+	while(read(s,&p,512)>0 &&  p.name[0]!='\0'){
+		if(cmp(split(src,2),p.name)==0){
+			if(p.typeflag!='5'){
+				 write(1,"cp -r : this is a file not a directory\n",strlen("cp -r : this is a file not a directory\n"));
+				return -1;
+				}
+			char *name=strdup("");
+			strcat(name,dest);
+			if(dest[strlen(dest)-1]!='/')
+				strcat(name,"/");
+			strcat(name,file_name(p.name));
+			strcat(name,"/");
+			mkdir(name,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+				free(name);
+			}
+		else{
+			if(cmp(p.name,split(src,2))!=0 && diff(split(src,2),p.name)==-1){
+				if(p.typeflag!='5'){
+						char *n=strdup("");
+						strcat(n,split(src,1));
+						strcat(n,"/");
+						strcat(n,p.name);
+						char *d=strdup("");
+						if(cmp(path_behind(dest),"")!=0)
+							strcat(d,path_behind(dest));
+						else
+							strcat(d,dest);
+						if(dest[strlen(dest)-1]!='/')
+							strcat(d,"/");
+						strcat(d,path_behind(p.name));
+						char *source = strdup(n);
+						char *desti = strdup(d);
+						free(n);
+						free(d);
+						cp_ftar_dn(source,desti);
+						}
+					
+				else if(p.typeflag=='5'){
+					char *n=strdup("");
+					strcat(n,split(src,1));
+					strcat(n,"/");
+					strcat(n,p.name);
+					char *d=strdup("");
+					strcat(d,dest);
+					if(dest[strlen(dest)-1]!='/')
+						strcat(d,"/");
+					strcat(d,path_behind(p.name));
+					char *source = strdup(n);
+					char *desti = strdup(d);
+					free(n);free(d);
+					cp_tardir_ndir(source,desti);
+						}
+				
+					}
+			}
+			sscanf(p.size, "%o", &size);
+			i=0;
+				while(i<((size + 512 - 1) / 512)){
+					read(s,&p,512);
+					i++;
+				}		
+		}
+	 return 0;
+}
+
+
+
+	
+int main(int argc,char **argv){
+	int j=1,option=-1,n=0;
+	
+	if(argc<=1){
+		 perror("cp : missing operand ");
+		 exit(-1);
+		}
+	
+	//verifie si l'un des arguments est une option
+	while(j<argc && option!=0){
+		if(argv[j][0]=='-' ){
+			option=1;
+			if(argv[j][1]=='r' || argv[j][1]=='R'){
+				option=0;
+				n+=j;
+			}
+					
+					}
+			j++;
+		}
+	if(option==1){
+		execvp("/bin/rm",argv);
+		}		
+
+		for(int i=1;i<argc;i++){
+			if(i==n){
+				}
+			else{
+				if(cmp(split(argv[i],1),"echec")==-1 ){
+					if(option==0){
+							rmr(argv[i]);
+						}
+						else{
+							if(argv[i][strlen(argv[i])-1]=='/'){
+								write(1,"rm : this is a directory \n",strlen("rm : this is a directory \n"));
+								}
+							else{
+							rm(argv[i]);
+							}
+						}
+					}
+						else{
+							//sinon on execute la commande rm usuelle
+							int pid=fork();
+							if(pid<0)
+								return (EXIT_FAILURE);
+							if(pid==0){
+									execlp("rm","rm",argv[i],NULL);
+								}		
+								waitpid(pid,NULL,0);
+								}
+						}
+				}
+			return 0;
+	}
 /*fichiers :
 
-normal ===> tar done
+normal ===> tar done 
 tar   ===> normal done
 tar  ===> tar done
 
 fichiers et dossiers :
 
 tar ==> dossier normal done
-tar ===> dossier tar done
+tar ===> dos sier tar done
 normal ===> dossier tar done
 
 dossiers : 
 
 dossier tar ==> dossier tar done
-dossier normal ==> dosssier tar ***********
-dossier tar ===> dossier normal **********
+dossier normal ==> dosssier tar doone
+dossier tar ===> dossier normal done
 */
