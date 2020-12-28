@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+
 /**returns 1 if the 2 strings are different and -1 if not**/
 int diff(char *deb ,char *str){
 	for(int i=0;i<strlen(deb);i++){
@@ -33,7 +34,7 @@ int nb_words(char *line){
 
 /**verifie si le chemin contient un tar ,si oui elle renvoie le chemin du tar et celui du fichier  *******/
 char *split(char *path,int num){
-	char *tar=strdup(path),*filename=NULL;
+	char *tar=strdup(path),*filename=strdup("");
 	int i=0,n=0;
 	int f=fork();
 	if(f==-1){
@@ -58,7 +59,7 @@ char *split(char *path,int num){
 			if(n==0){
 				return "echec";
 			}
-			filename=malloc(strlen(path)-strlen(tar));
+			//filename=malloc(strlen(path)-strlen(tar));
 			strncat(filename,path+strlen(tar)+1,strlen(path)-strlen(tar));
 		if(num==1)
 			return tar;
@@ -92,6 +93,40 @@ int isTar (char *filepath){
 				}
 	return 0;
 	}
-			
-			
-		
+/*************************************************************/
+char *tar_name(char *filepath){
+	int nb=0;char *lus;
+	char *tmp=strdup(split(filepath,1));
+	char *tmp2=strdup(split(filepath,1));
+	lus=strtok(tmp,"/");
+	if(lus==NULL){
+		nb=0;
+	}
+	else{
+		nb++;
+		while( strtok(NULL,"/")!=NULL){
+			nb++;
+			}
+		}
+	if(nb==1){
+		return filepath;
+		}
+	char *name=strtok(tmp2,"/");
+	for(int i=0;i<nb-1;i++){
+		name=strtok(NULL,"/");
+
+		}
+		return name;
+	}			
+/*******************************************************************/
+/*char *path_behind(char *filepath){
+	char *res=strdup(filepath);
+	for(int i=strlen(res)-2;i>0;i--){
+		if(res[i]=='/'){
+			res[i+1]='\0';
+			return res;
+			}
+	}
+	return "";
+}				
+	*/	

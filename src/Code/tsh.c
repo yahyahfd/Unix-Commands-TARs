@@ -7,15 +7,18 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>  
-#include <time.h>     
-#include "functions.h"    
+#include <time.h>
+#include <pwd.h>
+#include <grp.h>     
+#include "headers/functions.h"    
 #include <readline/readline.h>
 #include <readline/history.h>
-#include "rm.h"
-#include "cd.h"
-#include "cat.h"
-#include "rmdir.h"
-#include "ls.h"
+#include "headers/rm.h"
+#include "headers/cd.h"
+#include "headers/cat.h"
+#include "headers/rmdir.h"
+#include "headers/cp.h"
+//#include "ls.h"
 #define MAX_LEN 250
 
  
@@ -63,24 +66,35 @@ int execute_command(int argc,char **commands){
 		
 		/**********************EXIT**************************/
 
-		if(cmp(commands[0],"exit")==0){
+		else if(cmp(commands[0],"exit")==0){
 			kill(pid,SIGSTOP);
 		}
 		/**********************CAT**************************/
 		
-		if(cmp(commands[0],"cat")==0){
+		else if(cmp(commands[0],"cat")==0){
 			tsh_cat(argc,commands);
 		}
 		/**********************RMDIR**************************/
 		
-		if(cmp(commands[0],"rmdir")==0){
+		else if(cmp(commands[0],"rmdir")==0){
 			tsh_rmdir(argc,commands);
 		}
-		/**********************LS**************************/
+		/**********************CP**************************/
 		
-		if(cmp(commands[0],"ls")==0){
-			tsh_ls(argc,commands);
+		else if(cmp(commands[0],"cp")==0){
+			tsh_cp(argc,commands);
 		}
+		/**********************LS**************************/
+		else{
+			
+			execvp(commands[0],commands);
+			
+			}
+		/*if(cmp(commands[0],"ls")==0){
+			tsh_ls(argc,commands);
+		}*/
+		
+		
 	}
 	else if (pid < 0) {
 		return -1;
@@ -106,9 +120,10 @@ int main(){
 	char **commands;
 	int status,argc=0;
 	char tmp[MAX_LEN];
-	char *n=strdup( "tsh @ ");
-	strcat(n,hostname);
-	strcat(n," : ");
+	char *n=malloc(strlen("tsh @ ")+strlen(hostname)+strlen(" : "));
+	strncat(n,"tsh @ ",strlen("tsh @ "));
+	strncat(n,hostname,strlen(hostname));
+	strncat(n," : ",strlen(" : "));
 	const char* env = getenv("HOME");
 	char *pwd=strdup(getcwd(tmp,MAX_LEN));
 	do {
@@ -133,7 +148,6 @@ int main(){
 			else{
 				write(1,"cd : too many arguments\n",strlen("cd : too many arguments\n"));
 				}
-			
 			}
 		/**********************PWD**************************/
 		
@@ -150,7 +164,6 @@ int main(){
 		free(commands);
 	} 
 		while (status);
-	  
 	return 0;
 	
 }

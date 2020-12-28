@@ -1,4 +1,5 @@
 
+/**returns the number of occurences of a files inside a tar***/
 int occurences(char *filepath){
 	struct posix_header p;
 	static int k;
@@ -16,14 +17,15 @@ int occurences(char *filepath){
 		return k;
 
 	}
+/***remove an empty directory********/
 int remove_dir(char *filepath){
 	struct stat st;
 	struct stat *buf = &st;
 	struct posix_header p;
-	int lus,i=0,j=0,size ,n=0;
+	int lus,i=0,j=0;
 	int fd=open(split(filepath,1),O_RDWR);
 	if(fd==-1){
-		perror("error while opening the file");
+	    write(1, "rmdir: error while opening the file\n", strlen("rmdir: error while opening the file\n"));
 		exit(-1);
 		}
 		/*****deleting an emty tar***************/
@@ -41,7 +43,7 @@ int remove_dir(char *filepath){
 		}
 			else
 			{
-			 write(STDOUT_FILENO, "rmdir: This directory is not empty\n", strlen("rmdir: This directory is not empty\n"));
+			 write(1, "rmdir: This directory is not empty\n", strlen("rmdir: This directory is not empty\n"));
 			exit(EXIT_FAILURE);
 			}
 		}
@@ -49,61 +51,63 @@ int remove_dir(char *filepath){
 	/*******deleting a directory inside a tar***/
 	else
 	    { 
-	lseek(fd,0,SEEK_SET);
-	while(read(fd,&p,512)>0){
-		i+=512;
-		j+=512;
-		if(cmp(split(filepath,2),p.name)==0){
-			 if(p.typeflag!='5'){
-						 write(STDOUT_FILENO, "rmdir: This is not a directory\n", strlen("rmdir: This is not a directory\n"));			
-						 exit(EXIT_FAILURE);
-						 }
-						  	
-						 if(occurences(filepath)==0){								  
-						   write(STDOUT_FILENO, "rmdir: No such file or directory\n", strlen("rmdir: No such file or directory\n"));
-							exit(EXIT_FAILURE);
-						} 
-						if(occurences(filepath)>1){								  
-						   write(STDOUT_FILENO, "rmdir: This directory is not empty\n", strlen("rmdir: This directory is not empty\n"));
-							exit(EXIT_FAILURE);
-						}
-						  
-					else{
-						lseek(fd,i,SEEK_SET);
-						read(fd,&p,512);
-						if(	p.name[0]=='\0'){
-							memset(&p,'\0',512);
-							lseek(fd,i-512,SEEK_SET);
-							write(fd,&p,512);
-							set_checksum(&p);
-							exit(0);
+		
+		if(occurences(filepath)==0){								  
+							   write(1, "rmdir: No such file or directory\n", strlen("rmdir: No such file or directory\n"));
+								exit(EXIT_FAILURE);
 							}
+		lseek(fd,0,SEEK_SET);
+		while(read(fd,&p,512)>0){
+			i+=512;
+			j+=512;
+			 
+			if(cmp(split(filepath,2),p.name)==0){
+						if(p.typeflag!='5'){
+							 write(1, "rmdir: This is not a directory\n", strlen("rmdir: This is not a directory\n"));			
+							 exit(EXIT_FAILURE);
+							 }
+								
+						else if(occurences(filepath)>1){								  
+							   write(1, "rmdir: This directory is not empty\n", strlen("rmdir: This directory is not empty\n"));
+								exit(EXIT_FAILURE);
+							}
+							  
 						else{
 							lseek(fd,i,SEEK_SET);
-							while((lus=read(fd,&p,512))>0 && p.name[0]!='\0'){
+							read(fd,&p,512);
+							if(	p.name[0]=='\0'){
+								memset(&p,'\0',512);
 								lseek(fd,i-512,SEEK_SET);
-								i+=512;
-								write(fd,&p,lus);
-								lseek(fd,512,SEEK_CUR);
-								j+=512;
-								}				
-							memset(&p,'\0',512);
-							lseek(fd,j-512,SEEK_SET);
-							write(fd,&p,512);
-							set_checksum(&p);
-							exit(0);
-						}
-				  }
-				}
-		lseek(fd,i,SEEK_SET);
-		
+								write(fd,&p,512);
+								set_checksum(&p);
+								exit(0);
+								}
+							else{
+								lseek(fd,i,SEEK_SET);
+								while((lus=read(fd,&p,512))>0 && p.name[0]!='\0'){
+									lseek(fd,i-512,SEEK_SET);
+									i+=512;
+									write(fd,&p,lus);
+									lseek(fd,512,SEEK_CUR);
+									j+=512;
+									}				
+								memset(&p,'\0',512);
+								lseek(fd,j-512,SEEK_SET);
+								write(fd,&p,512);
+								set_checksum(&p);
+								exit(0);
+							}
+					  }
+					}
+			lseek(fd,i,SEEK_SET);
+			
+			}
+		return 0;
 		}
-	return 0;
-	}
 	return -1;
 }
 
-	
+/***main function of rmdir****/	
 int tsh_rmdir(int argc, char **argv){
 	int i=1,option=-1;
 	

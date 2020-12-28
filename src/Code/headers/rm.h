@@ -4,7 +4,7 @@
 /***remove a file ***/
 int rm(char *filepath){
 	struct posix_header p;
-	int i=0,j=0,k=0,size,lus;
+	int i=0,j=0,size,lus;
 	int fd=open(split(filepath,1),O_RDWR);
 	if(fd==-1 ){
 		write(1,"rm : error while opening the file \n",strlen("rm : error while opening the file \n"));
@@ -47,21 +47,19 @@ int rm(char *filepath){
 							}
 					}
 		close(fd);	
-		write(1,"rm :Cannot delete file :  No such file or director5y \n",strlen("rm :Cannot delete file :  No such file or directory \n"));
+		write(1,"rm :Cannot delete file :  No such file or directory \n",strlen("rm :Cannot delete file :  No such file or directory \n"));
 		return 0;
 	}
 /***remove files and directories recursivly***/
 int rmr(char *filepath){
-	struct stat st;
-	struct stat *buf = &st;
 	struct posix_header p;
 	int i=0;
 	int fd=open(split(filepath,1),O_RDWR);
 	if(fd==-1 ){
-		write(1,"rm : 2No such file or directory \n",strlen("rm : 2No such file or directory \n"));
+		write(1,"rm : No such file or directory \n",strlen("rm : 2No such file or directory \n"));
 		return -1;
 		}
-	//on veut supprimer un tar
+	//we want to delete a tarball
 	if(cmp(split(filepath,1),filepath)==0){
 		if(unlink(filepath)==-1){
 			write(1,"rm : unlik error :Cannot delete file\n",strlen("rm : unlik error :Cannot delete file\n"));
@@ -69,7 +67,7 @@ int rmr(char *filepath){
 			}
 		return 0;
 		}
-	//on veut supprimer un dossier dans un tar
+	//we want to delete a directory inside a tarball
 	lseek(fd,0,SEEK_SET);
 	while(read(fd,&p,512)>0){
 			i+=512;
@@ -88,7 +86,7 @@ int rmr(char *filepath){
 			return 0;
 		}
 	}
-	write(1,"rm : No such file or directory ",strlen("rm : No such file or directory "));
+	write(1,"rm : No such file or directory \n",strlen("rm : No such file or directory \n"));
 	return -1;
 }
 
@@ -100,7 +98,7 @@ int tsh_rm(int argc,char **argv){
 		 exit(-1);
 		}
 	
-	//verifie si l'un des arguments est une option
+	//verify if one of the arguments is an option
 	while(j<argc && option!=0){
 		if(argv[j][0]=='-' ){
 			option=1;
@@ -135,7 +133,7 @@ int tsh_rm(int argc,char **argv){
 						}
 					}
 						else{
-							//sinon on execute la commande rm usuelle
+							//we execute the usuall rm command
 							int pid=fork();
 							if(pid<0)
 								return (EXIT_FAILURE);

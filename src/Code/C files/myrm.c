@@ -24,7 +24,7 @@ int rm(char *filepath){
 	int i=0,j=0,k=0,size,lus;
 	int fd=open(split(filepath,1),O_RDWR);
 	if(fd==-1 ){
-		write(1,"rm : error while opening the file ",strlen("rm : error while opening the file "));
+		write(1,"rm : error while opening the file \n",strlen("rm : error while opening the file \n"));
 		exit(-1);
 		}
 	if(cmp(split(filepath,1),filepath)==0){
@@ -64,7 +64,7 @@ int rm(char *filepath){
 							}
 					}
 		close(fd);	
-		write(1,"rm :Cannot delete file :  No such file or directory \n",strlen("rm :Cannot delete file :  No such file or directory \n"));
+		write(1,"rm :Cannot delete file :  No such file or director5y \n",strlen("rm :Cannot delete file :  No such file or directory \n"));
 		return 0;
 	}
 /***remove files and directories recursivly***/
@@ -75,22 +75,25 @@ int rmr(char *filepath){
 	int i=0;
 	int fd=open(split(filepath,1),O_RDWR);
 	if(fd==-1 ){
-		write(1,"rm : No such file or directory ",strlen("rm : No such file or directory "));
-		exit(-1);
+		write(1,"rm : 2No such file or directory \n",strlen("rm : 2No such file or directory \n"));
+		return -1;
 		}
+	//on veut supprimer un tar
 	if(cmp(split(filepath,1),filepath)==0){
 		if(unlink(filepath)==-1){
-			write(1,"rm : unlik error :Cannot delete file",strlen("rm : unlik error :Cannot delete file"));
-			exit(-1);
+			write(1,"rm : unlik error :Cannot delete file\n",strlen("rm : unlik error :Cannot delete file\n"));
+			return -1;
 			}
-		exit(0);
+		return 0;
 		}
+	//on veut supprimer un dossier dans un tar
 	lseek(fd,0,SEEK_SET);
 	while(read(fd,&p,512)>0){
 			i+=512;
 			if(cmp(split(filepath,2),p.name)==0){
+				char *fullname = strdup(split(filepath,1));
 				while(diff(split(filepath,2),p.name)==-1 && p.name[0]!='\0'){
-						char *fullname = strdup(split(filepath,1));
+						
 						strcat(fullname,"/");
 						strcat(fullname,p.name);
 						rm(fullname);
@@ -98,11 +101,12 @@ int rmr(char *filepath){
 						lseek(fd,i-512,SEEK_SET);
 						read(fd,&p,512);
 				}
-			exit(0);
+			free(fullname);
+			return 0;
 		}
 	}
 	write(1,"rm : No such file or directory ",strlen("rm : No such file or directory "));
-	exit(-1);
+	return -1;
 }
 
 int main(int argc,char **argv){
@@ -114,14 +118,21 @@ int main(int argc,char **argv){
 		}
 	
 	//verifie si l'un des arguments est une option
-	while(j<argc){
-		if(argv[j][0]=='-' && argv[j][1]=='r' || argv[j][1]=='R'){
+	while(j<argc && option!=0){
+		if(argv[j][0]=='-' ){
+			option=1;
+			if(argv[j][1]=='r' || argv[j][1]=='R'){
 				option=0;
-				n+=j;	
+				n+=j;
+			}
+					
 					}
 			j++;
 		}
-		
+	if(option==1){
+		execvp("/bin/rm",argv);
+		}		
+
 		for(int i=1;i<argc;i++){
 			if(i==n){
 				}
@@ -131,8 +142,13 @@ int main(int argc,char **argv){
 							rmr(argv[i]);
 						}
 						else{
+							if(argv[i][strlen(argv[i])-1]=='/'){
+								write(1,"rm : this is a directory \n",strlen("rm : this is a directory \n"));
+								}
+							else{
 							rm(argv[i]);
 							}
+						}
 					}
 						else{
 							//sinon on execute la commande rm usuelle
@@ -146,5 +162,5 @@ int main(int argc,char **argv){
 								}
 						}
 				}
-	return 0;
+			return 0;
 	}
