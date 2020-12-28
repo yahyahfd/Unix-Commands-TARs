@@ -9,7 +9,7 @@
 #include <dirent.h>       
 #include "functions.h"
 #define MAX_LEN 250
-/***retourne le nom du tar **/
+/***returns tar name without path **/
 char *tar_name(char *filepath){
 	int nb=0;char *lus;
 	char *tmp=strdup(split(filepath,1));
@@ -34,7 +34,7 @@ char *tar_name(char *filepath){
 		}
 		return name;
 	}
-/**retourne le chemin avant le tar**/
+/**retruns the filepath before the tar****/
 char *before_tar(char *filepath){
 	int j=0;
 	char *res=strdup(split(filepath,1));
@@ -51,7 +51,7 @@ char *before_tar(char *filepath){
 	}
 	return res;
 	}
-/***retourne dans le dossier d'avant**/	
+/***returns to the previous directory**/	
 char *path_behind1(char *filepath){
 	char *res=strdup(filepath);
 	for(int i=strlen(res)-2;i>0;i--){
