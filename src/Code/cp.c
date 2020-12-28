@@ -886,7 +886,7 @@ int main(int argc,char **argv){
 							cp_ndir_tardir(argv[2],argv[3]);	
 						}
 					else if( cmp(split(argv[2],1),"echec")!=0 && (argv[2][strlen(argv[2])-1]=='/' || cmp(split(argv[2],2),"")==0) && cmp(split(argv[3],1),"echec")==0 && (opendir(argv[3])!=NULL || argv[3][strlen(argv[3])-1]=='/')){	
-							printf("hahahah");cp_tardir_ndir(argv[2],argv[3]);	
+							cp_tardir_ndir(argv[2],argv[3]);	
 						}
 					}
 						
