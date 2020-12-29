@@ -22,7 +22,7 @@ int remove_dir(char *filepath){
 	struct stat st;
 	struct stat *buf = &st;
 	struct posix_header p;
-	int lus,i=0,j=0;
+	int lus,i=0,j=0,size ,n=0;
 	int fd=open(split(filepath,1),O_RDWR);
 	if(fd==-1){
 	    write(1, "rmdir: error while opening the file\n", strlen("rmdir: error while opening the file\n"));

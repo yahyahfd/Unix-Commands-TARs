@@ -4,7 +4,7 @@
 /***remove a file ***/
 int rm(char *filepath){
 	struct posix_header p;
-	int i=0,j=0,size,lus;
+	int i=0,j=0,k=0,size,lus;
 	int fd=open(split(filepath,1),O_RDWR);
 	if(fd==-1 ){
 		write(1,"rm : error while opening the file \n",strlen("rm : error while opening the file \n"));
@@ -52,6 +52,8 @@ int rm(char *filepath){
 	}
 /***remove files and directories recursivly***/
 int rmr(char *filepath){
+	struct stat st;
+	struct stat *buf = &st;
 	struct posix_header p;
 	int i=0;
 	int fd=open(split(filepath,1),O_RDWR);

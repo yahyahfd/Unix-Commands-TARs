@@ -3,7 +3,7 @@
 int contenu_tar(char *chemin,char *filename){
 	struct posix_header p;
 	char buffer[512];
-	int fd=open(chemin,O_RDONLY),lus,size;
+	int fd=open(chemin,O_RDONLY),j,i=0,lus,size;
 	if(fd==-1){
 		write(1,"cat : no such file or directory\n",strlen("cat : no such file or directory\n"));
 		exit(EXIT_FAILURE);
@@ -75,6 +75,7 @@ int tsh_cat(int argc, char **argv){
 							}
 					}	
 		}
+
 	return 0;
 
 }

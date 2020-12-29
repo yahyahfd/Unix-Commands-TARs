@@ -1,25 +1,10 @@
 CC=gcc
-CFLAGS=-Wall -O
-ALL=  ls mycat myrmdir myrm cp cd 
-all:$(ALL)
+CFLAGS=-Wall -g
+all : Code/tsh.o
+	gcc Code/tsh.c -lreadline -o tsh
+tsh.o : tsh.c headers/tar.h headers/cat.h headers/cd.h headers/cp.h headers/functions.h headers/ls.h headers/tm.h headers/rmdir.h
 
-ls.o:
-	$(CC) -o src/Code/ls.o src/Code/ls.c $(CFLAGS)
-
-myrmdir.o:
-	$(CC) -o src/Code/myrmdir.o src/Code/myrmdir.c $(CFLAGS)
-
-mycat.o:
-	$(CC) -o src/Code/mycat.o src/Code/mycat.c $(CFLAGS)
-
-myrm.o:
-	$(CC) -o src/Code/myrm.o src/Code/myrm.c $(CFLAGS)
-
-cp.o:
-	$(CC) -o src/Code/cp.o src/Code/cp.c $(CFLAGS)
-
-cd.o:
-	$(CC) -o src/Code/cd.o src/Code/cd.c $(CFLAGS)
-
+cleanall:
+	rm -rf Code/*.o *~
 clean:
-	rm -f src/Code/*.o core
+	rm -rf *~

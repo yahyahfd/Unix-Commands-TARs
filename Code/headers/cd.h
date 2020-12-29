@@ -35,7 +35,7 @@ char *cd(char *filepath,char *wd){
 	struct stat st;
 	struct stat *buf = &st;
 	struct posix_header p;
-	//const char* env = getenv("HOME");
+	const char* env = getenv("HOME");
 	char tmp[MAX_LEN];
 
 	//if we do cd .. to get back to the directory before

@@ -86,7 +86,6 @@
 		free(tmp);
 		free(tmp2);
 		free(name);
-		return 0;
 	}
 		
 	/***************copy a normal file to a tar one *******/
@@ -95,7 +94,9 @@
 			struct stat *buf = &st;
 			struct posix_header p;
 			struct posix_header hd;
-			int i=0;
+			struct group *grp;
+			struct passwd *pwd;
+			int i=0,j=0,k=0,size,lus,end=0;
 			int s=open(src,O_RDONLY);
 			int d=open(split(dest,1),O_RDWR);
 			if(s<0 ){
@@ -108,6 +109,7 @@
 				return -1;
 				}
 			char buffer[buf->st_size];
+			char tmp[512];
 			if(read(s,buffer,buf->st_size)<0){
 				perror("error while reading from source file\n");
 				return -1;
@@ -197,6 +199,8 @@
 	/*******************copy a tar file in a normal file***********/
 	int cp_tarf_nf(char *src,char *dest){
 		
+		struct stat st;
+		struct stat *buf = &st;
 		struct posix_header p;
 		int size=0,lus,i=0;
 		
@@ -212,7 +216,7 @@
 			return -1;
 			}
 		
-		while((lus=read(s,&p,512))>0 && p.name[0]!='\0'){
+		while(lus=read(s,&p,512)>0 && p.name[0]!='\0'){
 			i+=512;
 			if(cmp(split(src,2),p.name)==0){
 				sscanf(p.size, "%o", &size);
@@ -235,7 +239,8 @@
 	int cp_ftar_ftar(char *src,char *dest){
 		struct posix_header p1;	
 		struct posix_header p2;	
-		int i=0,size,lus,k=0;
+		struct posix_header hd;	
+		int i=0,j=0,size,lus,k=0;
 		
 		int s= open(split(src,1),O_RDONLY);
 		int d= open(split(dest,1),O_RDWR);
@@ -261,7 +266,7 @@
 			rm(dest);
 		}	
 			lseek(d,0,SEEK_SET);
-			while((lus=read(s,&p1,512))>0 && p1.name[0]!='\0'){
+			while(lus=read(s,&p1,512)>0 && p1.name[0]!='\0'){
 				i+=512;
 				if(cmp(split(src,2),p1.name)==0){
 					sscanf(p1.size, "%o", &size);
@@ -339,6 +344,8 @@
 	/***************copy a tar file in a normal directory****/
 	int cp_ftar_dn(char *src ,char *dest){
 		
+		struct stat st;
+		struct stat *buf = &st;
 		struct posix_header p;
 		int size=0,lus,i=0;
 		int s = open(split(src,1),O_RDONLY);
@@ -361,7 +368,7 @@
 			write(1,"cp : src file : no such file or directory\n",strlen("cp : src file : no such file or directory\n"));
 			return -1;
 			}
-		while((lus=read(s,&p,512))>0 && p.name[0]!='\0'){
+		while(lus=read(s,&p,512)>0 && p.name[0]!='\0'){
 			i+=512;
 			if(cmp(split(src,2),p.name)==0){
 				sscanf(p.size, "%o", &size);
@@ -383,6 +390,7 @@
 		}
 	/********************copy a tar file inside a tar directory*****/
 	int cp_ftar_tardir(char *src ,char *dest){
+		struct posix_header p1;
 		struct posix_header p2;
 		struct posix_header tmp;
 		int i=0,size,k=0;
@@ -501,7 +509,8 @@
 	/**********copy a tar directory in another tar directory **********/
 	int copy_tars(char *src ,char *dest){
 		struct posix_header p1;
-		int size=0,i=0;
+		struct posix_header p2;
+		int size=0,i=0,k=0;
 		int s = open(src,O_RDONLY);
 		int d = open(split(dest,1),O_RDWR);
 		
@@ -562,7 +571,8 @@
 		struct stat st;
 		struct stat *buf = &st;
 		struct stat st2;
-		 struct dirent *dt;
+		struct stat *buf2 = &st2;
+		struct dirent *dt;
 		struct posix_header p;
 		struct posix_header p2;
 		int i=0,j=0,b=-1,size=0;
@@ -705,7 +715,8 @@
 	/*****************copy a tar directory inside a normal directory*****/
 	int cp_tardir_ndir(char *src ,char *dest){
 		 struct posix_header p;
-		 int size,i;
+		 int size,i,lus;
+		 struct dirent *dt;
 		 DIR *dirp = opendir(dest);
 		 int s=open(split(src,1),O_RDONLY);
 		 dirp = opendir(dest);
@@ -849,7 +860,8 @@
 						cp_fn_tardir(argv[1],argv[2]);
 						}
 					else{
-						execvp("/bin/cp",argv);
+						write(1,"cp : can not copy directories without -r option\n",strlen("cp : can not copy directories without -r option\n"));
+						return -1;
 						}
 					}
 				}

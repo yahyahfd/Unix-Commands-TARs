@@ -119,7 +119,7 @@ char *tar_name(char *filepath){
 		return name;
 	}			
 /*******************************************************************/
-/*char *path_behind(char *filepath){
+char *path_behind1(char *filepath){
 	char *res=strdup(filepath);
 	for(int i=strlen(res)-2;i>0;i--){
 		if(res[i]=='/'){
@@ -129,4 +129,4 @@ char *tar_name(char *filepath){
 	}
 	return "";
 }				
-	*/	
+
