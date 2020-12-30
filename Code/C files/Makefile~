@@ -1,0 +1,24 @@
+CC=gcc
+CFLAGS=-g -Wall
+ALL=  ls mycat myrmdir myrm cp cd reds exit
+all:$(ALL)
+
+ls:
+	$(CC) -o ls.c
+myrmdir:
+	$(CC) -o myrmdir.c
+
+mycat:
+	$(CC) -o mycat.c
+myrm :
+	$(CC) -o myrm.c
+cd:
+	$(CC) -o cd.c
+cp :
+	$(CC) -o cp.c
+reds:
+	$(CC) -o reds.c
+exit :
+	$(CC) -o exit.c
+clean:
+	rm -f ls mycat 
