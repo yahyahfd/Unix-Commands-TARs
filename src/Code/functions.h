@@ -10,14 +10,6 @@
 #include <stdlib.h>
 
 
-/**returns 1 if the 2 strings are different and -1 if not**/
-int diff(char *deb ,char *str){
-	for(int i=0;i<strlen(deb);i++){
-		if(str[i]!=deb[i])
-			return 1;
-		}
-		return -1;
-	}
 
 /**retourne le nombre de mots d'une chaîne**/
 int nb_words(char *line){
@@ -27,7 +19,7 @@ int nb_words(char *line){
 		{
 			count++;
 			}
-		
+
 		}
 		return count;
 	}
@@ -71,7 +63,7 @@ char *split(char *path,int num){
 	free(filename);
 	exit(1);
 	}
-	
+
 
 /***********compare deux chaînes de caractéres**************/
 
@@ -84,6 +76,20 @@ int cmp(char *name1,char *name2){
 		}
 	return 0;
 	}
+/***********since "cmp" didn't take into account that "path" is similar to "path/" **************/
+int samepath(char *name1,char *name2){
+	if((strlen(name1)==strlen(name2)+1)){
+		for(int i=0;i<strlen(name2);i++){
+			if(name1[i]!=name2[i])
+				return -1;
+		}
+		if(name1[strlen(name2)=='/'])
+			return 0;
+	}
+	return -1;
+}
+
+
 /***************vérifie si c'est une archive tar********************/
 
 int isTar (char *filepath){
@@ -93,50 +99,3 @@ int isTar (char *filepath){
 				}
 	return 0;
 	}
-/****returns the tar name****/
-char *tar_name(char *filepath){
-	char *tmp=strdup(split(filepath,1));
-	char *tmp2=strdup(split(filepath,1));
-	char *name;
-	int nb=0;char *lus;
-	int f=fork();
-	if(f==-1){
-		perror("fork error");
-		exit(-1);
-		}
-	wait(NULL);
-	if(f==0){
-		lus=strtok(tmp,"/");
-		if(lus==NULL){
-			nb=0;
-		}
-		else{
-			nb++;
-			while( strtok(NULL,"/")!=NULL){
-				nb++;
-				}
-			}
-		if(nb==1){
-			return filepath;
-			}
-		name=strtok(tmp2,"/");
-		for(int i=0;i<nb-1;i++){
-			name=strtok(NULL,"/");
-
-			}
-			return name;
-	}
-	free(name);
-	exit(1);
-}		
-			
-char *path_behind(char *filepath){
-	char *res=strdup(filepath);
-	for(int i=strlen(res)-2;i>0;i--){
-		if(res[i]=='/'){
-			res[i+1]='\0';
-			return res;
-			}
-	}
-	return "";
-}		
