@@ -9,23 +9,27 @@ Ces commandes sont présentes dans le dossier** "C files"** sous la forme de fic
 Le fichier **"headers"** quant à lui contient une version ".h "des mêmes commandes qui seront utilisable directement à travers le shell "tsh.c".
 
 
-###STRUCTURES DE DONNÉES
+STRUCTURES DE DONNÉES
 ---
 
-* *struct posix_header*: Cette structure est présente dans presque toutes les commandes, et nous a servi à manipuler les archives tar et leur contenu.
-* *struct group*: Cette structure a été utilisé dans la commande cp et a servi à renvoyer des informations sur un groupe.
-* *struct stat*: Cette structure est renvoyé par la méthode stat et permet d'obtenir l'état d'un fichier, notamment la taille, l'utilisateur/groupe d'utilisateurs, le numéro d'i-noeud, etc...
-* *struct dirent*: Cette structure est renvoyée par la méthode readdir(), et contient le nom du fichier, son type, son numéro d'i-noeud, etc...
-* *struct tm*: Cette structure a été utilisée dans la commande ls afin de renvoyer une date correcte pour les fichiers dans un tarballs, concernant la date de dernière modification ou de création. Cette structure permet de manipuler une date de manière plus simple.
-* *struct passwd*: Cette structure contient les identifiants d'un utilisateur.
+* *`struct posix_header`* : Cette structure est présente dans presque toutes les commandes, et nous a servi à manipuler les archives tar et leur contenu.
+* *`struct group`*:  Cette structure a été utilisé dans la commande cp et a servi à renvoyer des informations sur un groupe.
+* *`struct stat`*:  Cette structure est renvoyé par la méthode stat et permet d'obtenir l'état d'un fichier, notamment la taille, l'utilisateur/groupe d'utilisateurs, le numéro d'i-noeud, etc...
+* *`struct dirent`*:  Cette structure est renvoyée par la méthode readdir(), et contient le nom du fichier, son type, son numéro d'i-noeud, etc...
+* *`struct tm`*:  Cette structure a été utilisée dans la commande ls afin de renvoyer une date correcte pour les fichiers dans un tarballs, concernant la date de dernière modification ou de création. Cette structure permet de manipuler une date de manière plus simple.
+* *`struct passwd`*:  Cette structure contient les identifiants d'un utilisateur.
+* *`la bibliotheque readline`* :  on s'est servi de cette bibliothéque pour pouvoir récupérer la ligne de commande saisie par l'utilisateur
 
 
 
-###ALGORITHMES IMPLÉMENTÉS
+ALGORITHMES IMPLÉMENTÉS
 ---
 
 Pour la majorité des commandes, nous avons utilisé des fonctions communes que l'on retrouve dans** "headers/functions.h"**, comme par exemple la fonction *"split"* qui permet de séparer la partie tar et la partie dossier dans le path d'un tarball, 
 la fonction "cmp" qui nous permet de comparer des chaines de caractères, la fonction "isTar" utilisé bien que très rarement afin de déterminer si un path donné n'est qu'un fichier tar, 
 ou encore la fonction "samepath" qui sert à éviter toute confusion pour les fichiers tar et signaler qu'un répertoire "r1" et "r1/" sont identiques.
 Dans le dossier headers, chaque version ".h" des commandes contient une fonction sous la forme commandname_tsh qui sera appelé dans le main de "tsh.c" et regroupe donc la totalité des fonctions de la commande "commandname".
+On trouve aussi dans le fichier tsh.c plusieurs fonctions qui permettent de diviser une ligne de commande en tokens pour pouvoir recuperer le nom de la commande et ses arguments,et la fonction
+command_execute qui execute la fonction convenable a la commande tapée par l'utilisateur.
 Comme souligné précédemment, une version des commandes destinée aux tests est présente sous la forme de fichiers c dans le répertoire "C files".
+
