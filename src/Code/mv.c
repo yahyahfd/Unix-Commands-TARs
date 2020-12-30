@@ -226,14 +226,13 @@ int main(int argc, char **argv){
       }
     }
   }else{//There is no Tarball Involved, we just call the mv function as it is on all arguments (including the options)
-    for(int i=1;i<argc;i++){
-      int pid=fork();
-      if(pid<0)
-        return (EXIT_FAILURE);
-      if(pid==0)
-        execlp("mv","mv",argv[i],NULL);
-      waitpid(pid,NULL,0);
-    }
+    int pid=fork();
+    if(pid<0)
+      return (EXIT_FAILURE);
+    if(pid==0)
+      execvp("mv",argv);
+    waitpid(pid,NULL,0);
+
   }
   return 0;
 }
