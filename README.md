@@ -1,10 +1,8 @@
 # SY5 Projet
 **Paquets à installer**
 
-On doit d'abord installer git:
 * sudo apt update
-* sudo apt install git
-Puis les deux package suivant:
+* git: sudo apt install git
 * build essential package : sudo apt-get install build-essential
 * libreadline package : sudo apt-get install libreadline-dev
 
