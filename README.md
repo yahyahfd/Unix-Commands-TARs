@@ -1,4 +1,7 @@
 # SY5 Projet
+
+Ce projet doit être amélioré et mis à jour.
+
 **Paquets à installer**
 
 * sudo apt update
